@@ -555,7 +555,7 @@ class BitLinear(nn.Linear):
         super(BitLinear, self).__init__(in_features, out_features, bias=bias)
         self.norm = RMSNorm(in_features, eps=1e-8)
 
-    def forward(self, x, lambda_=0):
+    def forward(self, x, lambda_=1):
         """
         Overrides the forward pass to include quantization.
 
@@ -569,7 +569,8 @@ class BitLinear(nn.Linear):
         w = self.weight
 
         # Apply RMS normalization to the input
-        x_norm = self.norm(x)
+        # x_norm = self.norm(x)
+        x_norm = x
 
         # Apply quantization to both activations and weights
         # Uses Straight-Through Estimator (STE) trick with .detach() for gradient flow
