@@ -542,7 +542,7 @@ class BitLinear(nn.Linear):
     This is primarily for training; kernel optimization is needed for efficiency in deployment.
     """
 
-    def __init__(self, in_features, out_features, bias=False):
+    def __init__(self, in_features, out_features, lambda_, bias=False):
         """
         Initializes the BitLinear layer.
 
@@ -554,8 +554,9 @@ class BitLinear(nn.Linear):
         # Initialize the superclass nn.Linear with the given parameters
         super(BitLinear, self).__init__(in_features, out_features, bias=bias)
         self.norm = RMSNorm(in_features, eps=1e-8)
+        self.lambda_ = lambda_
 
-    def forward(self, x, lambda_=1):
+    def forward(self, x):
         """
         Overrides the forward pass to include quantization.
 
@@ -574,8 +575,8 @@ class BitLinear(nn.Linear):
 
         # Apply quantization to both activations and weights
         # Uses Straight-Through Estimator (STE) trick with .detach() for gradient flow
-        x_quant = x_norm + lambda_ * (activation_quant(x_norm) - x_norm).detach()
-        w_quant = w + lambda_ * (weight_quant(w) - w).detach()
+        x_quant = x_norm + self.lambda_() * (activation_quant(x_norm) - x_norm).detach()
+        w_quant = w + self.lambda_() * (weight_quant(w) - w).detach()
         # Perform linear operation with quantized values
         y = F.linear(x_quant, w_quant)
 
