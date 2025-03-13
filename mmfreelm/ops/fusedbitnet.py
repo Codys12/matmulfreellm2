@@ -542,7 +542,7 @@ class BitLinear(nn.Linear):
     This is primarily for training; kernel optimization is needed for efficiency in deployment.
     """
 
-    def __init__(self, in_features, out_features, lambda_, bias=False):
+    def __init__(self, in_features, out_features, lambda_, should_rms=False, bias=False):
         """
         Initializes the BitLinear layer.
 
@@ -555,6 +555,7 @@ class BitLinear(nn.Linear):
         super(BitLinear, self).__init__(in_features, out_features, bias=bias)
         self.norm = RMSNorm(in_features, eps=1e-8)
         self.lambda_ = lambda_
+        self.should_rms = should_rms
 
     def forward(self, x):
         """
@@ -570,8 +571,10 @@ class BitLinear(nn.Linear):
         w = self.weight
 
         # Apply RMS normalization to the input
-        # x_norm = self.norm(x)
         x_norm = x
+        if self.should_rms:
+            x_norm = self.norm(x)
+        
 
         # Apply quantization to both activations and weights
         # Uses Straight-Through Estimator (STE) trick with .detach() for gradient flow
